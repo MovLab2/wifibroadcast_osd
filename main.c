@@ -41,6 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "frsky.h"
 #elif defined(LTM)
 #include "ltm.h"
+#elif defined(MAVLINK)
+#include "mavlink_parse.h"
 #endif
 #include "render.h"
 #include <sys/types.h>
@@ -62,6 +64,7 @@ struct timeval timeout;
 int main(int argc, char *argv[]) {
 	uint8_t buf[256];
 	size_t n;
+	
 #ifdef FRSKY
 	frsky_state_t fs;
 #endif
@@ -80,9 +83,7 @@ int main(int argc, char *argv[]) {
 		//printf("%d\n",n);
 		if(n > 0) {
 			n = read(STDIN_FILENO, buf, sizeof(buf));
-
 			if(n == 0) {
-			//	break; //EOF
 			}
 
 			if(n<0) {
@@ -93,6 +94,8 @@ int main(int argc, char *argv[]) {
 			frsky_parse_buffer(&fs, &td, buf, n);
 #elif defined(LTM)
 			ltm_read(&td, buf, n);
+#elif defined(MAVLINK)
+			mavlink_parse_buffer(&td, buf, n);
 #endif
 		}
 		

@@ -1,4 +1,4 @@
-CPPFLAGS+= -I/opt/vc/include/ -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux
+CPPFLAGS+= -I/opt/vc/include/ -I/usr/src/mavlink/common -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux
 LDFLAGS+= -lfreetype -lz
 LDFLAGS+=-L/opt/vc/lib/ -lGLESv2 -lEGL -lopenmaxil -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt -lm -lshapes
 
@@ -8,9 +8,12 @@ all: osd
 	gcc -c -o $@ $< $(CPPFLAGS)
  
 
-osd: main.o frsky.o render.o telemetry.o ltm.o
+osd: main.o frsky.o render.o telemetry.o ltm.o mavlink_parse.o
 	gcc -o $@ $^ $(LDFLAGS)
 
+install:
+	chmod 755 osd
+	cp osd /usr/bin
 
 clean:
 	rm -f osd *.o *~

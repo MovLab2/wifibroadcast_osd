@@ -9,10 +9,6 @@ int width, height;
 #define CELL_WARNING_PCT1 (CELL_WARNING1-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 #define CELL_WARNING_PCT2 (CELL_WARNING2-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 
-bool setting_home;
-bool home_set;
-float home_lat;
-float home_lon;
 int home_counter;
 char buffer[50];
 
@@ -27,23 +23,16 @@ int getHeight(float pos_y_percent) {
 int scale_factor;
 
 void render_init() {
-        init(&width, &height);
-	
+    init(&width, &height);
 	scale_factor = width/170;
 	home_counter = 0;
 }
 
-
-
-/*long old_blocks = 0;
-long old_defective = 0;
-float smooth_rssi[3];
-uint8_t pointer = 0; */
 void render(telemetry_data_t *td) {
 	Start(width, height);
 
 #ifdef ALT
-	if (home_set){
+	if (td->home_set){
 		#ifdef IMPERIAL
 		draw_altitude((int)(td->altitude * TO_FEET), getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
 		#else
@@ -53,7 +42,7 @@ void render(telemetry_data_t *td) {
 #endif
 
 #ifdef SPEED
-	if (home_set){
+	if (td->home_set){
 		#ifdef IMPERIAL
 		draw_speed((int)(td->speed*TO_MPH), getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
 		#else
@@ -63,12 +52,11 @@ void render(telemetry_data_t *td) {
 #endif
 
 #ifdef HOME_ARROW
-	if (home_set)
+	if (td->home_set)
 		#ifdef FRSKY
-		paintArrow((int)course_to((td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude, home_lat, home_lon), getWidth(50), getHeight(80));
-		#elif defined(LTM)
-		paintArrow((int)course_to(home_lat, home_lon, td->latitude, td->longitude), getWidth(50), getHeight(80));
+		paintArrow((int)course_to((td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude, td->home_lat, td->home_lon), getWidth(50), getHeight(80));
 		#endif
+		paintArrow((int)course_to(td->home_lat, td->home_lon, td->latitude, td->longitude), getWidth(50), getHeight(80));
 #endif
 
 #ifdef HEADING
@@ -84,11 +72,9 @@ void render(telemetry_data_t *td) {
 			//sprintf(text, "c%d: %ddBm", i, td->rx_status->adapter[i].current_signal_dbm);
 			if (best_dbm < td->rx_status->adapter[i].current_signal_dbm)
 				best_dbm = td->rx_status->adapter[i].current_signal_dbm;
-			//render_text(text, rd, RENDER_OFFSET_X + 8 * RENDER_SPACING, text_y - (ac-1) * 1 * RENDER_FONT_SIZE + i * RENDER_FONT_SIZE, RENDER_FONT_SIZE, 0xff, 0xff, 0xff);
 		}
 		//smooth_rssi[pointer++] = 100.0f - ((float)(t->damaged_block_cnt-old_defective) /(float)(t->received_block_cnt - old_blocks)*100.0f);
 		//if (pointer == 3) pointer = 0;
-
 		//old_defective = t->damaged_block_cnt;
 		//old_blocks = t->received_block_cnt;
 		draw_signal(best_dbm, 0/*(int)((smooth_rssi[0] + smooth_rssi[1] + smooth_rssi[2])/3.0f)*/, getWidth(20), getHeight(90), scale_factor*3);
@@ -107,35 +93,33 @@ void render(telemetry_data_t *td) {
 	#if defined(FRSKY)
 	//we assume that if we get the NS and EW values from frsky protocol, that we have a fix
 	if ((td->ew == 'E' || td->ew == 'W') && (td->ns == 'N' || td->ns == 'S')){
-		setting_home = true;
+		td->setting_home = true;
 		draw_position((td->ns == 'N'? 1:-1) * td->latitude, (td->ew == 'E'? 1:-1) * td->longitude, true, 0, getWidth(85), getHeight(5), scale_factor*2.5);
 	}else{
 		//no fix
-		setting_home = false;
+		td->setting_home = false;
 		home_counter = 0;
 		draw_position((td->ns == 'N'? 1:-1) * td->latitude, (td->ew == 'E'? 1:-1) * td->longitude, false, 0, getWidth(85), getHeight(5), scale_factor*2.5);
 	}
 	
 	//if 10 packages after each other have a fix automatically set home
-	if (setting_home && !home_set){
+	if (td->setting_home && !td->home_set){
 		if (++home_counter == 10){
-			home_set = true;
-			home_lat = (td->ns == 'N'? 1:-1) * td->latitude;
-			home_lon = (td->ew == 'E'? 1:-1) * td->longitude;
+			td->home_set = true;
+			td->home_lat = (td->ns == 'N'? 1:-1) * td->latitude;
+			td->home_lon = (td->ew == 'E'? 1:-1) * td->longitude;
 		}
 	}
 	#elif defined(MAVLINK)
-	
-	#elif defined(LTM)
-	if (td->fix > 2 && !home_set){
-		setting_home = true;
+	if (td->fix > 2 && !td->home_set){
+		td->setting_home = true;
 	}
 
-	if (setting_home && !home_set){
+	if (td->setting_home && !td->home_set){
 		if (++home_counter == 10){
-			home_set = true;
-			home_lat = td->latitude;
-			home_lon = td->longitude;
+			td->home_set = true;
+			td->home_lat = td->latitude;
+			td->home_lon = td->longitude;
 			td->ns = 1;
 			td->ew = 1;
 		}
@@ -145,12 +129,11 @@ void render(telemetry_data_t *td) {
 #endif
 
 #ifdef DISTANCE
-	if (home_set)
+	if (td->home_set)
 		#ifdef FRSKY
 		draw_home_distance((int)distance_between(home_lat, home_lon, (td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
-		#elif defined(LTM)
-                draw_home_distance((int)distance_between(home_lat, home_lon, td->latitude, td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
 		#endif
+        draw_home_distance((int)distance_between(home_lat, home_lon, td->latitude, td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
 #endif
 
 #ifdef HORIZON
@@ -174,9 +157,12 @@ void render(telemetry_data_t *td) {
 		#endif // AHI ladder
 	#endif // EXCHANGE_ROLL_AND_PITCH
 
-	
 #elif defined(MAVLINK)
-
+	#if DRAW_AHI_LADDER == true
+	draw_horizon(INVERT_ROLL * td->roll, INVERT_PITCH * td->pitch, getWidth(50), getHeight(50), 1.5f);
+	#else
+	paintAHI(INVERT_ROLL * td->roll, INVERT_PITCH * td->pitch);
+	#endif //AHI ladder
 #elif defined(LTM)
 	#if DRAW_AHI_LADDER == true
 	draw_horizon(INVERT_ROLL * td->roll, INVERT_PITCH * td->pitch, getWidth(50), getHeight(50), 1.5f);
@@ -255,7 +241,6 @@ void draw_signal(int8_t signal, int package_rssi, int pos_x, int pos_y, float sc
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
-
 	sprintf(buffer, "Signal: %ddBm", signal);
 	Text(pos_x, pos_y, buffer, SansTypeface, scale);
 
@@ -313,7 +298,6 @@ void paintAHI(int hor_angle, int ver_angle){
 
 //new stuff from fritz walter https://www.youtube.com/watch?v=EQ01b3aJ-rk
 void draw_bat_remaining(int remaining, int pos_x, int pos_y, float scale){
-	//prevent black empty indicator to draw left to battery
 	if (remaining < 0) remaining = 0;
 	else if (remaining > 100) remaining = 100;
 

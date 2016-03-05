@@ -21,12 +21,12 @@
 
 /** UNITS**/
 //uncomment if you want to use imperial units
-//#define IMPERIAL
+#define IMPERIAL
 
 /** DETAILS **/
 //set to true if you want to show the ladders
 //on raspi 1 it is not recommended to use the ladders as it might reduce performance and cause artefacts in the video due too much load
-#define DRAW_ALT_LADDER false
+#define DRAW_ALT_LADDER true
 #define DRAW_SPEED_LADDER false
 #define DRAW_COURSE_LADDER true
 #define DRAW_AHI_LADDER true
@@ -43,7 +43,7 @@
 #define POSITION
 #define HORIZON
 #define DISTANCE
-//#define DRAW_CURRENT
+#define DRAW_CURRENT
 
 /** PROTOCOL **/
 /* FRSKY -> Frsky protocoll
@@ -54,7 +54,8 @@
  * Only frsky and LTM is currently working
  */
 //#define FRSKY
-#define LTM
+//#define LTM
+#define MAVLINK
 
 /** RSSI **/
 //packet based rssi, uncomment to disable
