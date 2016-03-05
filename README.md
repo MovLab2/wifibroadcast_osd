@@ -52,23 +52,30 @@ sudo apt-get install libjpeg8-dev indent libfreetype6-dev ttf-dejavu-core
 
 3) download and install modified openvg library (uses layer 1 instead of 0, default background is transparent, allows outlines on text)
 ```
-cd
+cd /usr/src
 git clone https://github.com/SamuelBrucksch/openvg
 cd openvg
 make library
 sudo make install
 ```
 
-4) Download and compile osd source code
+4) download and install Mavlink c_library source
+```
+cd /usr/src
+https://github.com/mavlink/c_library.git
+```
+
+
+5) Download and compile mavlink_osd source code
 ```
 cd
-git clone https://github.com/SamuelBrucksch/wifibroadcast_osd.git
+git clone https://github.com/slackr31337/wifibroadcast_osd.git
 cd wifibroadcast_osd
 make
 ```
 
 #Configuration
-All current configuration values can be set in [osdconfig.h](https://github.com/SamuelBrucksch/wifibroadcast_osd/blob/master/osdconfig.h)
+All current configuration values can be set in [osdconfig.h](https://github.com/slackr31337/wifibroadcast_osd/blob/master/osdconfig.h)
 
 # Starting OSD
 I uploaded my start scripts as a sample how to start wifibroadcast with 1 video and 1 telemetry stream. have a look at those and adapt your own start scripts based on that.
