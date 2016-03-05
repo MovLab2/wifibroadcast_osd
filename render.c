@@ -31,24 +31,24 @@ void render_init() {
 void render(telemetry_data_t *td) {
 	Start(width, height);
 
+#ifdef MODE
+	draw_mode(td->mode, getWidth(55), getHeight(10), 2);
+#endif	
+
 #ifdef ALT
-	if (td->home_set){
 		#ifdef IMPERIAL
 		draw_altitude((int)(td->altitude * TO_FEET), getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
 		#else
 		draw_altitude((int)td->altitude, getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
 		#endif
-	}
 #endif
 
 #ifdef SPEED
-	if (td->home_set){
 		#ifdef IMPERIAL
 		draw_speed((int)(td->speed*TO_MPH), getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
 		#else
 		draw_speed((int)td->speed, getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
 		#endif
-	}
 #endif
 
 #ifdef HOME_ARROW
@@ -69,7 +69,9 @@ void render(telemetry_data_t *td) {
 		int ac = td->rx_status->wifi_adapter_cnt;
 		int best_dbm = -1000;
 		for(i=0; i<ac; ++i) {
-			//sprintf(text, "c%d: %ddBm", i, td->rx_status->adapter[i].current_signal_dbm);
+			#ifdef DEBUG
+			sprintf(text, "c%d: %ddBm", i, td->rx_status->adapter[i].current_signal_dbm);
+			#endif
 			if (best_dbm < td->rx_status->adapter[i].current_signal_dbm)
 				best_dbm = td->rx_status->adapter[i].current_signal_dbm;
 		}
@@ -111,7 +113,7 @@ void render(telemetry_data_t *td) {
 		}
 	}
 	#elif defined(MAVLINK)
-	if (td->fix > 2 && !td->home_set){
+	if (td->fix_type > 2 && !td->home_set){
 		td->setting_home = true;
 	}
 
@@ -124,7 +126,7 @@ void render(telemetry_data_t *td) {
 			td->ew = 1;
 		}
 	}
-	draw_position(td->latitude, td->longitude, td->fix, td->sats, getWidth(85), getHeight(5), scale_factor*2.5);
+	draw_position(td->latitude, td->longitude, td->osd_fix_type, td->sats, getWidth(85), getHeight(5), scale_factor*2.5);
 	#endif
 #endif
 
@@ -133,7 +135,7 @@ void render(telemetry_data_t *td) {
 		#ifdef FRSKY
 		draw_home_distance((int)distance_between(home_lat, home_lon, (td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
 		#endif
-        draw_home_distance((int)distance_between(home_lat, home_lon, td->latitude, td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
+        draw_home_distance((int)distance_between(td->home_lat, td->home_lon, td->latitude, td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
 #endif
 
 #ifdef HORIZON
@@ -163,6 +165,7 @@ void render(telemetry_data_t *td) {
 	#else
 	paintAHI(INVERT_ROLL * td->roll, INVERT_PITCH * td->pitch);
 	#endif //AHI ladder
+	
 #elif defined(LTM)
 	#if DRAW_AHI_LADDER == true
 	draw_horizon(INVERT_ROLL * td->roll, INVERT_PITCH * td->pitch, getWidth(50), getHeight(50), 1.5f);
@@ -252,7 +255,6 @@ void draw_signal(int8_t signal, int package_rssi, int pos_x, int pos_y, float sc
 
 void paintArrow(int heading, int pos_x, int pos_y){
 	if (heading == 360) heading = 0;
-
 #ifdef INVERT_HOME_ARROW
 	heading = 360 - heading;
 #endif
@@ -313,7 +315,8 @@ void draw_bat_remaining(int remaining, int pos_x, int pos_y, float scale){
 	}else if (remaining <= CELL_WARNING_PCT2){
 		Fill(255,0, 0, 1);
 	}else{
-		Fill(255, 255, 255, 1);
+		//Fill(255, 255, 255, 1);
+		Fill(0, 80, 0, 1);
 	}
 	
 	Stroke(0,0,0,1);
@@ -461,6 +464,7 @@ void draw_sat(int sats, int fixtype, int pos_x, int pos_y, float scale){
 	//sprintf(buffer, "S: %d F: %d", sats, fixtype);
 	//float s_width = TextWidth(buffer, SansTypeface, scale_factor * scale);
 	//TextEnd(pos_x, pos_y, buffer, SansTypeface, scale_factor * scale);
+	
 }
 
 void draw_position(float lat, float lon, bool fix, int sats, int pos_x, int pos_y, float scale){

@@ -44,6 +44,8 @@
 #define HORIZON
 #define DISTANCE
 #define DRAW_CURRENT
+#define MODE
+
 
 /** PROTOCOL **/
 /* FRSKY -> Frsky protocoll

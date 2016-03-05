@@ -65,12 +65,11 @@ int main(int argc, char *argv[]) {
 	uint8_t buf[256];
 	size_t n;
 	
+	telemetry_data_t td;
+	telemetry_init(&td);
 #ifdef FRSKY
 	frsky_state_t fs;
 #endif
-	telemetry_data_t td;
-	telemetry_init(&td);
-
 	render_init();
 
 	long long prev_time = current_timestamp();

@@ -2,19 +2,27 @@ CPPFLAGS+= -I/opt/vc/include/ -I/usr/src/mavlink/common -I/opt/vc/include/interf
 LDFLAGS+= -lfreetype -lz
 LDFLAGS+=-L/opt/vc/lib/ -lGLESv2 -lEGL -lopenmaxil -lbcm_host -lvcos -lvchiq_arm -lpthread -lrt -lm -lshapes
 
-all: osd
-
+all: mavlink_osd
+	
 %.o: %.c
 	gcc -c -o $@ $< $(CPPFLAGS)
  
 
-osd: main.o frsky.o render.o telemetry.o ltm.o mavlink_parse.o
+frysky_osd: main.o frsky.o render.o telemetry.o
 	gcc -o $@ $^ $(LDFLAGS)
+	chmod 755 $@
+	
+mavlink_osd: main.o render.o telemetry.o mavlink_parse.o
+	gcc -o $@ $^ $(LDFLAGS)
+	chmod 755 $@
+	
+ltm_osd:main.o render.o telemetry.o ltm.o 
+	gcc -o $@ $^ $(LDFLAGS)
+	chmod 755 $@
 
 install:
-	chmod 755 osd
-	cp osd /usr/bin
+	cp *_osd /usr/bin
 
 clean:
-	rm -f osd *.o *~
+	rm -f frysky_osd mavlink_osd ltm_osd *.o *~
 
