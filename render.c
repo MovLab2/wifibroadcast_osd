@@ -32,7 +32,7 @@ void render(telemetry_data_t *td) {
 	Start(width, height);
 
 #ifdef MODE
-	draw_mode(td->mode, getWidth(55), getHeight(10), 2);
+	draw_mode(td->mode, getWidth(85), getHeight(90), 2);
 #endif	
 
 #ifdef ALT
@@ -75,6 +75,7 @@ void render(telemetry_data_t *td) {
 			if (best_dbm < td->rx_status->adapter[i].current_signal_dbm)
 				best_dbm = td->rx_status->adapter[i].current_signal_dbm;
 		}
+		
 		//smooth_rssi[pointer++] = 100.0f - ((float)(t->damaged_block_cnt-old_defective) /(float)(t->received_block_cnt - old_blocks)*100.0f);
 		//if (pointer == 3) pointer = 0;
 		//old_defective = t->damaged_block_cnt;
@@ -112,6 +113,7 @@ void render(telemetry_data_t *td) {
 			td->home_lon = (td->ew == 'E'? 1:-1) * td->longitude;
 		}
 	}
+	
 	#elif defined(MAVLINK)
 	if (td->fix_type > 2 && !td->home_set){
 		td->setting_home = true;

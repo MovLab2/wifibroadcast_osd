@@ -1,6 +1,6 @@
 /** BATTERY **/
 //TODO automatically calculate cells based on voltage
-#define CELLS 3
+#define CELLS 6
 #define CELL_MAX 4.20
 #define CELL_MIN 3.30
 //warning level 1 -> orange
