@@ -1,5 +1,4 @@
 #pragma once
-
 #include "bcm_host.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +12,6 @@
 #include <EGL/eglext.h>
 #include <stdio.h>
 #include "telemetry.h"
-
 #include <errno.h>
 #include <resolv.h>
 #include <string.h>
@@ -46,10 +44,11 @@ void draw_bat_remaining(int remaining, int pos_x, int pos_y, float scale);
 void draw_compass(int heading, int pos_x, int pos_y, bool ladder_enabled, float scale);
 void draw_bat_status(float voltage, float current, int pos_x, int pos_y, float scale);
 void draw_sat(int sats, int fixtype, int pos_x, int pos_y, float scale);
-void draw_position(float lat, float lon, bool fix, int sats, int pos_x, int pos_y, float scale);
+void draw_position(float lat, float lon, int fix_type, int sats, int pos_x, int pos_y, float scale);
 void draw_home_distance(int distance, int pos_x, int pos_y, float scale);
 //autopilot mode, mavlink specific, could be used if mode is in telemetry data of other protocols as well
-void draw_mode(char *mode, int pos_x, int pos_y, float scale);
+void draw_flight_mode(uint8_t flight_mode, int pos_x, int pos_y, float scale);
+void draw_message(char* msg, int pos_x, int pos_y, float scale);
 void draw_home_indicator(int home_angle, int pos_x, int pos_y, float scale);
 void draw_altitude(int alt, int pos_x, int pos_y, bool ladder_enabled, float scale);
 void draw_speed(int speed, int pos_x, int pos_y, bool ladder_enabled, float scale);

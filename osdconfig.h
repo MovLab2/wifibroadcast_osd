@@ -43,7 +43,7 @@
 #define POSITION
 #define HORIZON
 #define DISTANCE
-#define DRAW_CURRENT
+#define DRAWCURRENT
 #define MODE
 
 
@@ -60,6 +60,5 @@
 #define MAVLINK
 
 /** RSSI **/
-//packet based rssi, uncomment to disable
-//TODO not implemented yet
+//packet based rssi
 //#define PACKET_BASED_RSSI

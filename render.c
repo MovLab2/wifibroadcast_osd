@@ -9,6 +9,7 @@ int width, height;
 #define CELL_WARNING_PCT1 (CELL_WARNING1-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 #define CELL_WARNING_PCT2 (CELL_WARNING2-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 
+int scale_factor;
 int home_counter;
 char buffer[50];
 
@@ -20,8 +21,6 @@ int getHeight(float pos_y_percent) {
 	return (height * 0.01f * pos_y_percent);
 }
 
-int scale_factor;
-
 void render_init() {
     init(&width, &height);
 	scale_factor = width/170;
@@ -31,32 +30,29 @@ void render_init() {
 void render(telemetry_data_t *td) {
 	Start(width, height);
 
-#ifdef MODE
-	draw_mode(td->mode, getWidth(85), getHeight(90), 2);
-#endif	
-
 #ifdef ALT
-		#ifdef IMPERIAL
-		draw_altitude((int)(td->altitude * TO_FEET), getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
-		#else
-		draw_altitude((int)td->altitude, getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
-		#endif
+	#ifdef IMPERIAL
+	draw_altitude((int)(td->altitude * TO_FEET), getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
+	#else
+	draw_altitude((int)td->altitude, getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
+	#endif
 #endif
 
 #ifdef SPEED
-		#ifdef IMPERIAL
-		draw_speed((int)(td->speed*TO_MPH), getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
-		#else
-		draw_speed((int)td->speed, getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
-		#endif
+	#ifdef IMPERIAL
+	draw_speed((int)(td->speed*TO_MPH), getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
+	#else
+	draw_speed((int)td->speed, getWidth(40), getHeight(50), DRAW_SPEED_LADDER, 2);
+	#endif
 #endif
 
 #ifdef HOME_ARROW
-	if (td->home_set)
+	if (td->home_set) {
 		#ifdef FRSKY
 		paintArrow((int)course_to((td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude, td->home_lat, td->home_lon), getWidth(50), getHeight(80));
 		#endif
 		paintArrow((int)course_to(td->home_lat, td->home_lon, td->latitude, td->longitude), getWidth(50), getHeight(80));
+	}
 #endif
 
 #ifdef HEADING
@@ -67,30 +63,37 @@ void render(telemetry_data_t *td) {
 	if(td->rx_status != NULL) {
 		int i;
 		int ac = td->rx_status->wifi_adapter_cnt;
-		int best_dbm = -1000;
+		int best_dbm = -120;
 		for(i=0; i<ac; ++i) {
-			#ifdef DEBUG
-			sprintf(text, "c%d: %ddBm", i, td->rx_status->adapter[i].current_signal_dbm);
-			#endif
-			if (best_dbm < td->rx_status->adapter[i].current_signal_dbm)
+			if (best_dbm < td->rx_status->adapter[i].current_signal_dbm) {
 				best_dbm = td->rx_status->adapter[i].current_signal_dbm;
+			}
 		}
-		
-		//smooth_rssi[pointer++] = 100.0f - ((float)(t->damaged_block_cnt-old_defective) /(float)(t->received_block_cnt - old_blocks)*100.0f);
-		//if (pointer == 3) pointer = 0;
-		//old_defective = t->damaged_block_cnt;
-		//old_blocks = t->received_block_cnt;
-		draw_signal(best_dbm, 0/*(int)((smooth_rssi[0] + smooth_rssi[1] + smooth_rssi[2])/3.0f)*/, getWidth(20), getHeight(90), scale_factor*3);
+		draw_signal(best_dbm, 0, getWidth(20), getHeight(90), scale_factor*3);
 	}
 #endif
 
 #ifdef BATT_STATUS
-	draw_bat_status(td->voltage, 0.0f, getWidth(20), getHeight(5), scale_factor * 2.5);
+	draw_bat_status(td->voltage, td->ampere, getWidth(20), getHeight(5), scale_factor * 2.5);
 #endif
 
 #ifdef BATT_REMAINING
 	draw_bat_remaining(((td->voltage/CELLS)-CELL_MIN)/(CELL_MAX-CELL_MIN)*100, getWidth(10), getHeight(90), 3);
 #endif 
+
+#ifdef MAVLINK
+	//Mavlink flight mode
+	draw_flight_mode(td->flight_mode, getWidth(90), getHeight(90), 1.5);
+	
+	if(td->message_pending) {
+		draw_message(td->message, getWidth(50), getHeight(10), 3);
+		//TODO set message timeout
+		td->message_pending = false;
+		#ifdef DEBUG
+		printf("render.c \nmessage_pending=%s\n\n",td->message);
+		#endif
+	}
+#endif	
 
 #ifdef POSITION
 	#if defined(FRSKY)
@@ -115,29 +118,19 @@ void render(telemetry_data_t *td) {
 	}
 	
 	#elif defined(MAVLINK)
-	if (td->fix_type > 2 && !td->home_set){
-		td->setting_home = true;
-	}
-
-	if (td->setting_home && !td->home_set){
-		if (++home_counter == 10){
-			td->home_set = true;
-			td->home_lat = td->latitude;
-			td->home_lon = td->longitude;
-			td->ns = 1;
-			td->ew = 1;
-		}
-	}
-	draw_position(td->latitude, td->longitude, td->osd_fix_type, td->sats, getWidth(85), getHeight(5), scale_factor*2.5);
+	draw_position(td->latitude, td->longitude, td->fix_type, td->sats, getWidth(85), getHeight(5), scale_factor*2.5);
 	#endif
 #endif
 
 #ifdef DISTANCE
-	if (td->home_set)
+	if (td->home_set) {
 		#ifdef FRSKY
 		draw_home_distance((int)distance_between(home_lat, home_lon, (td->ns == 'N'? 1:-1) *td->latitude, (td->ns == 'E'? 1:-1) *td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
 		#endif
+		#ifdef MAVLINK
         draw_home_distance((int)distance_between(td->home_lat, td->home_lon, td->latitude, td->longitude), getWidth(50), getHeight(5), scale_factor * 2.5);
+		#endif
+	}
 #endif
 
 #ifdef HORIZON
@@ -246,7 +239,7 @@ void draw_signal(int8_t signal, int package_rssi, int pos_x, int pos_y, float sc
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
-	sprintf(buffer, "Signal: %ddBm", signal);
+	sprintf(buffer, "Rx: %ddBm", signal);
 	Text(pos_x, pos_y, buffer, SansTypeface, scale);
 
 #ifdef PACKET_BASED_RSSI
@@ -424,7 +417,7 @@ void draw_compass(int heading, int pos_x, int pos_y, bool ladder_enabled, float 
 		}
 		case 90: {
 			draw = true;
-			c = "0";
+			c = "E";
 			break;
 		}
 		case 180: {
@@ -452,7 +445,7 @@ void draw_bat_status(float voltage, float current, int pos_x, int pos_y, float s
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
-	
+
 	sprintf(buffer, "%.2fV", voltage);
 	TextEnd(pos_x, pos_y, buffer, SansTypeface, scale);
 #ifdef DRAWCURRENT
@@ -461,33 +454,44 @@ void draw_bat_status(float voltage, float current, int pos_x, int pos_y, float s
 #endif
 }
 
-void draw_sat(int sats, int fixtype, int pos_x, int pos_y, float scale){
-	//TODO fix type
-	//sprintf(buffer, "S: %d F: %d", sats, fixtype);
-	//float s_width = TextWidth(buffer, SansTypeface, scale_factor * scale);
-	//TextEnd(pos_x, pos_y, buffer, SansTypeface, scale_factor * scale);
-	
-}
-
-void draw_position(float lat, float lon, bool fix, int sats, int pos_x, int pos_y, float scale){
+void draw_position(float lat, float lon, int fix_type, int sats, int pos_x, int pos_y, float scale){
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
-
+	
 	sprintf(buffer, "Lon: %.6f", lon);
 	TextEnd(pos_x, pos_y, buffer, SansTypeface, scale);
+	
 	sprintf(buffer, "Lat: %.6f", lat);
 	TextEnd(pos_x, pos_y + 30, buffer, SansTypeface, scale);
-	if (!fix){
-		sprintf(buffer, "No valid fix!");
-		TextEnd(pos_x, pos_y + 60, buffer, SansTypeface, scale*.75f);
-	}else if (sats > 0){
-		#ifdef LTM
-		sprintf(buffer, "Sats: %d", sats);
-		TextEnd(pos_x, pos_y + 60, buffer, SansTypeface, scale*.75f); 
-		#endif
-	}
 	
+	switch (fix_type)
+		{
+		case 0:
+			sprintf(buffer, "No valid fix!");
+		case 1:
+			Fill(0xff,0x0,0x0,1);
+			sprintf(buffer, "No valid fix! Sats: %d", sats);
+			break;
+		case 2:
+			sprintf(buffer, "2D fix Sats: %d", sats);
+			break;
+		case 3:
+			Fill(0x0,0x50,0x0,1);
+			sprintf(buffer, "3D fix Sats: %d", sats);
+			break;
+		case 4:
+			Fill(0x0,0x50,0x0,1);
+			sprintf(buffer, "DGPS Sats: %d", sats);
+			break;
+		case 5:
+			Fill(0x0,0x50,0x0,1);
+			sprintf(buffer, "RTK Sats: %d", sats);
+			break;
+		default:
+			sprintf(buffer, "No valid fix!");
+		}
+	TextEnd(pos_x, pos_y + 60, buffer, SansTypeface, scale*.75f); 
 }
 
 void draw_home_distance(int distance, int pos_x, int pos_y, float scale){
@@ -502,9 +506,73 @@ void draw_home_distance(int distance, int pos_x, int pos_y, float scale){
 	TextMid(pos_x, pos_y, buffer, SansTypeface, scale);
 }
 
-//autopilot mode, mavlink specific, could be used if mode is in telemetry data of other protocols as well
-void draw_mode(char *mode, int pos_x, int pos_y, float scale){
-	TextEnd(pos_x, pos_y, mode, SansTypeface, scale_factor * scale);
+void draw_flight_mode(uint8_t flight_mode, int pos_x, int pos_y, float scale){
+	Fill(0xff,0xff,0xff,1);
+	Stroke(0,0,0,1);
+	StrokeWidth(1);
+	
+	//ArduCopter Flight Modes
+	switch((int)flight_mode)
+		{
+		case 0:	
+			sprintf(buffer, "STABILIZE");
+			break;
+		case 1:
+			sprintf(buffer, "?");
+			break;
+		case 2:
+			sprintf(buffer, "POS HOLD");
+			break;
+		case 3:
+			sprintf(buffer, "AUTO");
+			break;
+		case 4:
+			sprintf(buffer, "ACRO");
+			break;
+		case 5:
+			sprintf(buffer, "LOITER");
+			break;
+		case 6:
+			sprintf(buffer, "RTL");
+			break;
+		case 7:
+			sprintf(buffer, "CIRCLE");
+			break;
+		case 8:
+			sprintf(buffer, "AUTOTUNE");
+			break;
+		case 10:
+			sprintf(buffer, "?");
+			break;
+		case 11:
+			sprintf(buffer, "RTL");
+			break;
+		case 12:
+			sprintf(buffer, "LOITER");
+			break;
+		case 14:
+			sprintf(buffer, "LAND");
+			break;
+		case 15:
+			sprintf(buffer, "GUIDED");
+			break;
+		case 16:
+			sprintf(buffer, "POS HOLD");
+			break;
+		default:
+			sprintf(buffer, "FLIGHT MODE");
+			break;
+		}
+	#ifdef DEBUG
+	printf("render.c: draw_flight_mode:\nflight mode=%d\n",flight_mode);
+	printf("buffer=%s \n\n",buffer);
+	#endif 
+	TextMid(pos_x, pos_y, buffer, SansTypeface, scale);
+}
+
+void draw_message(char* msg, int pos_x, int pos_y, float scale){
+	//printf("render.c draw_message:\nmsg=%s \n\n",msg);
+	TextMid(pos_x, pos_y, msg, SansTypeface, scale);
 }
 
 void draw_home_indicator(int home_angle, int pos_x, int pos_y, float scale){
@@ -563,11 +631,12 @@ void draw_altitude(int alt, int pos_x, int pos_y, bool ladder_enabled, float sca
 	y[4] = y[3];
 	x[5] = x[0];
 	y[5] = y[0];
+	
 	StrokeWidth(5);
 	Stroke(0, 0, 0, 1);
 	Polyline(x, y, 6);
 
-	Stroke(0xff, 0xff, 0xff, 1);
+	Stroke(0xff,0xff,0xff,1);
 	StrokeWidth(2);
 	Polyline(x, y, 6);
 

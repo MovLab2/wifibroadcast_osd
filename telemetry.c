@@ -28,28 +28,43 @@ void telemetry_init(telemetry_data_t *td) {
 	td->sats = 0;
 	td->fix = 0;
 #endif
+#ifdef MAVLINK
+	td->pitch = 0;
+	td->roll = 0;
+	td->gps_alt = 0;
+	td->battery_remaining = 0;
+	td->throttle = 0;
+	td->climb = 0;
+	td->flight_mode = 1;
+	td->armed = 0;
+	td->message_pending = false;
+	td->message = "Loading...";
+	td->callsign = "HAM CALLSIGN";
+#endif
 	td->rx_status = telemetry_wbc_status_memory_open();
 }
 
 
 wifibroadcast_rx_status_t *telemetry_wbc_status_memory_open(void) {
-        int fd = shm_open("/wifibroadcast_rx_status_0", O_RDWR, S_IRUSR | S_IWUSR);
+	//int fd = shm_open("/wifibroadcast_rx_status_0", O_RDWR, S_IRUSR | S_IWUSR);
+	int fd = shm_open("/wifibroadcast_rx_status_1", O_RDWR, S_IRUSR | S_IWUSR);
 
-        if(fd < 0) {
-                fprintf(stderr, "Could not open wifibroadcast rx status\n");
-		return NULL;
-        }
+	if(fd < 0) {
+			fprintf(stderr, "Could not open wifibroadcast rx status\n");
+	return NULL;
+	}
 
-        if (ftruncate(fd, sizeof(wifibroadcast_rx_status_t)) == -1) {
-                perror("ftruncate");
-                exit(1);
-        }
+	if (ftruncate(fd, sizeof(wifibroadcast_rx_status_t)) == -1) {
+			perror("ftruncate");
+			exit(1);
+	}
 
-        void *retval = mmap(NULL, sizeof(wifibroadcast_rx_status_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        if (retval == MAP_FAILED) {
-                perror("mmap");
-                exit(1);
-        }
+	void *retval = mmap(NULL, sizeof(wifibroadcast_rx_status_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (retval == MAP_FAILED) {
+			perror("mmap");
+			exit(1);
+	}
 
-        return (wifibroadcast_rx_status_t*)retval;
+	return (wifibroadcast_rx_status_t*)retval;
 }
+

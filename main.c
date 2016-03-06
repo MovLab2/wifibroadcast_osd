@@ -50,6 +50,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <sys/select.h>
 
+float version = 0.1;
+fd_set set;
+struct timeval timeout;
+
 long long current_timestamp() {
     struct timeval te; 
     gettimeofday(&te, NULL); // get current time
@@ -57,21 +61,33 @@ long long current_timestamp() {
     return milliseconds;
 }
 
-fd_set set;
-
-struct timeval timeout;
-
 int main(int argc, char *argv[]) {
 	uint8_t buf[256];
 	size_t n;
 	
+	printf("%s Version %dd - 2016\n\n ",argv[0],version);
+	
+	#ifdef DEBUG
+	printf("%s\n ",argv[1]);
+	#endif
+	
+	//if(argc != 2) {
+	//	printf("Usage: %s <Ham Call Sign>\n",argv[0]);
+	//	return 1;
+	//}
+	
 	telemetry_data_t td;
 	telemetry_init(&td);
+	
 #ifdef FRSKY
 	frsky_state_t fs;
 #endif
+#ifdef MAVLINK
+	//Needs input validation
+	//Ham Radio Call Sign
+	//td->callsign = argv[1];
+#endif
 	render_init();
-
 	long long prev_time = current_timestamp();
 	while(1) {
 		FD_ZERO(&set);
@@ -79,12 +95,10 @@ int main(int argc, char *argv[]) {
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 100*1000;
 		n = select(STDIN_FILENO + 1, &set, NULL, NULL, &timeout);
-		//printf("%d\n",n);
 		if(n > 0) {
 			n = read(STDIN_FILENO, buf, sizeof(buf));
 			if(n == 0) {
 			}
-
 			if(n<0) {
 				perror("read");
 				exit(-1);
@@ -97,17 +111,14 @@ int main(int argc, char *argv[]) {
 			mavlink_parse_buffer(&td, buf, n);
 #endif
 		}
-		
 	#ifdef DEBUG
 		prev_time = current_timestamp();
 		render(&td);
 		long long took = current_timestamp() - prev_time;
-		printf("Render took %lldms to execute.\n", took);
+		//printf("Render took %lldms to execute.\n", took);
 	#else
 		render(&td);
 	#endif
-
 	}
-
 	return 0;
 }
