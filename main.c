@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <sys/select.h>
 
-float version = 0.1;
+double version = 0.1;
 fd_set set;
 struct timeval timeout;
 
@@ -65,14 +65,14 @@ int main(int argc, char *argv[]) {
 	uint8_t buf[256];
 	size_t n;
 	
-	printf("%s Version %dd - 2016\n\n ",argv[0],version);
+	printf("%s - 2016\nVersion %d\n\n ",argv[0],version);
 	
 	#ifdef DEBUG
 	printf("%s\n ",argv[1]);
 	#endif
 	
 	//if(argc != 2) {
-	//	printf("Usage: %s <Ham Call Sign>\n",argv[0]);
+	//	printf("Usage: %s\n",argv[0]);
 	//	return 1;
 	//}
 	
@@ -81,11 +81,6 @@ int main(int argc, char *argv[]) {
 	
 #ifdef FRSKY
 	frsky_state_t fs;
-#endif
-#ifdef MAVLINK
-	//Needs input validation
-	//Ham Radio Call Sign
-	//td->callsign = argv[1];
 #endif
 	render_init();
 	long long prev_time = current_timestamp();

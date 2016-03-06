@@ -69,7 +69,7 @@ void render(telemetry_data_t *td) {
 				best_dbm = td->rx_status->adapter[i].current_signal_dbm;
 			}
 		}
-		draw_signal(best_dbm, 0, getWidth(20), getHeight(90), scale_factor*3);
+		draw_signal(best_dbm, td->rc_rssi, getWidth(20), getHeight(90), scale_factor*3);
 	}
 #endif
 
@@ -235,12 +235,14 @@ void rotatePoints(float *x, float *y, int angle, int points, int center_x, int c
 	}
 }
 
-void draw_signal(int8_t signal, int package_rssi, int pos_x, int pos_y, float scale){
+void draw_signal(int8_t signal, int rc_rssi, int pos_x, int pos_y, float scale){
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
 	sprintf(buffer, "Rx: %ddBm", signal);
 	Text(pos_x, pos_y, buffer, SansTypeface, scale);
+	sprintf(buffer, "RC: %d%%", rc_rssi);
+	Text(pos_x, pos_y + 30, buffer, SansTypeface, scale);
 
 #ifdef PACKET_BASED_RSSI
 	sprintf(buffer, "RSSI: %d%%", package_rssi);
@@ -448,7 +450,7 @@ void draw_bat_status(float voltage, float current, int pos_x, int pos_y, float s
 
 	sprintf(buffer, "%.2fV", voltage);
 	TextEnd(pos_x, pos_y, buffer, SansTypeface, scale);
-#ifdef DRAWCURRENT
+#ifdef DRAW_CURRENT
 	sprintf(buffer, "%.2fA", current);
 	TextEnd(pos_x, pos_y + 30, buffer, SansTypeface, scale);
 #endif
@@ -506,68 +508,16 @@ void draw_home_distance(int distance, int pos_x, int pos_y, float scale){
 	TextMid(pos_x, pos_y, buffer, SansTypeface, scale);
 }
 
-void draw_flight_mode(uint8_t flight_mode, int pos_x, int pos_y, float scale){
+void draw_flight_mode(char* flight_mode, int pos_x, int pos_y, float scale){
 	Fill(0xff,0xff,0xff,1);
 	Stroke(0,0,0,1);
 	StrokeWidth(1);
 	
-	//ArduCopter Flight Modes
-	switch((int)flight_mode)
-		{
-		case 0:	
-			sprintf(buffer, "STABILIZE");
-			break;
-		case 1:
-			sprintf(buffer, "?");
-			break;
-		case 2:
-			sprintf(buffer, "POS HOLD");
-			break;
-		case 3:
-			sprintf(buffer, "AUTO");
-			break;
-		case 4:
-			sprintf(buffer, "ACRO");
-			break;
-		case 5:
-			sprintf(buffer, "LOITER");
-			break;
-		case 6:
-			sprintf(buffer, "RTL");
-			break;
-		case 7:
-			sprintf(buffer, "CIRCLE");
-			break;
-		case 8:
-			sprintf(buffer, "AUTOTUNE");
-			break;
-		case 10:
-			sprintf(buffer, "?");
-			break;
-		case 11:
-			sprintf(buffer, "RTL");
-			break;
-		case 12:
-			sprintf(buffer, "LOITER");
-			break;
-		case 14:
-			sprintf(buffer, "LAND");
-			break;
-		case 15:
-			sprintf(buffer, "GUIDED");
-			break;
-		case 16:
-			sprintf(buffer, "POS HOLD");
-			break;
-		default:
-			sprintf(buffer, "FLIGHT MODE");
-			break;
-		}
 	#ifdef DEBUG
-	printf("render.c: draw_flight_mode:\nflight mode=%d\n",flight_mode);
-	printf("buffer=%s \n\n",buffer);
+	printf("render.c: draw_flight_mode:\nflight mode=%s\n",flight_mode);
 	#endif 
-	TextMid(pos_x, pos_y, buffer, SansTypeface, scale);
+	
+	TextMid(pos_x, pos_y, flight_mode, SansTypeface, scale);
 }
 
 void draw_message(char* msg, int pos_x, int pos_y, float scale){

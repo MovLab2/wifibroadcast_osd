@@ -38,12 +38,12 @@
 #define HOME_ARROW
 #define BATT_REMAINING
 #define BATT_STATUS
+#define DRAW_CURRENT
 #define ALT
 #define SPEED
 #define POSITION
 #define HORIZON
 #define DISTANCE
-#define DRAWCURRENT
 #define MODE
 
 
@@ -58,6 +58,11 @@
 //#define FRSKY
 //#define LTM
 #define MAVLINK
+
+/** FLIGHT CONTROLLER TYPE **/
+#define ARDUCOPTER
+//#define ARDUPLANE
+
 
 /** RSSI **/
 //packet based rssi

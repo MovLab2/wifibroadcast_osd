@@ -32,10 +32,10 @@ typedef struct {
 	int16_t ew, ns;
 	bool setting_home;
 	bool home_set;
+	bool gps_fix;
 	float home_lat;
 	float home_lon;
 	float home_alt;
-	bool gps_fix;
 	char* callsign;
 #ifdef LTM
 	int16_t roll, pitch;
@@ -47,22 +47,26 @@ typedef struct {
 #ifdef MAVLINK		 	
 	float pitch;
 	float roll;
-	float battery_remaining;
 	float throttle;
 	float climb;
 	float lat,lng,alt;
+	float wp_lat,wp_lng,wp_alt;
 	float gps_alt;
 	float hdop;
+	float airspeed;
+	float vehicle_clearance;
+	float battery_remaining;
+	float rc_rssi;
 	uint8_t sats;
 	uint8_t armed;
 	uint8_t fix_type;
-	uint8_t flight_mode;
 	uint16_t wp_target_bearing;
 	uint16_t wp_dist;
 	uint16_t wp_number;
 	bool haltset;
 	bool message_pending;
 	char* message;
+	char* flight_mode;
 #endif
 	wifibroadcast_rx_status_t *rx_status;	
 } telemetry_data_t;

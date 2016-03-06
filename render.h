@@ -47,7 +47,7 @@ void draw_sat(int sats, int fixtype, int pos_x, int pos_y, float scale);
 void draw_position(float lat, float lon, int fix_type, int sats, int pos_x, int pos_y, float scale);
 void draw_home_distance(int distance, int pos_x, int pos_y, float scale);
 //autopilot mode, mavlink specific, could be used if mode is in telemetry data of other protocols as well
-void draw_flight_mode(uint8_t flight_mode, int pos_x, int pos_y, float scale);
+void draw_flight_mode(char* flight_mode, int pos_x, int pos_y, float scale);
 void draw_message(char* msg, int pos_x, int pos_y, float scale);
 void draw_home_indicator(int home_angle, int pos_x, int pos_y, float scale);
 void draw_altitude(int alt, int pos_x, int pos_y, bool ladder_enabled, float scale);
