@@ -27,7 +27,7 @@
 #define TO_DEG 180.0f / M_PI
 
 void render_init();
-void render(telemetry_data_t *td);
+void render(telemetry_data_t *td, int cells, bool verbose);
 
 //rotate a polyline/polygon with this
 void rotatePoints(float *x, float *y, int angle, int points, int center_x, int center_y);

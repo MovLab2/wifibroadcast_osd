@@ -59,7 +59,7 @@ int mavlink_parse_buffer(telemetry_data_t *td, uint8_t *buf, int buflen) {
 			//MAVLINK Flight Modes
 			#ifdef ARDUCOPTER
 			switch((int)custom_mode)
-				{
+			{
 				case MODE_STABILIZE:	
 					td->flight_mode =  "STABILIZE";
 					break;
@@ -112,7 +112,7 @@ int mavlink_parse_buffer(telemetry_data_t *td, uint8_t *buf, int buflen) {
 				default:
 					td->flight_mode =  "FLIGHT MODE";
 					break;
-				}
+			}
 			#endif
 			#ifdef DEBUG
 			printf("motor_armed=%d\n",motor_armed);

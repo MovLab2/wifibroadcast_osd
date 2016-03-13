@@ -5,23 +5,24 @@
 #include "osdconfig.h"
 
 typedef struct {
-        uint32_t received_packet_cnt;
-        uint32_t wrong_crc_cnt;
-        int8_t current_signal_dbm;
+	uint32_t received_packet_cnt;
+	uint32_t wrong_crc_cnt;
+	int8_t current_signal_dbm;
 } wifi_adapter_rx_status_t;
 
 typedef struct {
-        time_t last_update;
-        uint32_t received_block_cnt;
-        uint32_t damaged_block_cnt;
-        uint32_t tx_restart_cnt;
-        uint32_t wifi_adapter_cnt;
-        wifi_adapter_rx_status_t adapter[8];
+	time_t last_update;
+	uint32_t received_block_cnt;
+	uint32_t damaged_block_cnt;
+	uint32_t tx_restart_cnt;
+	uint32_t wifi_adapter_cnt;
+	wifi_adapter_rx_status_t adapter[8];
 } wifibroadcast_rx_status_t;
 
 typedef struct {
 	float voltage;
 	float ampere;
+	int cells;
 	float baro_altitude;
 	float heading;
 	float speed;
@@ -69,6 +70,7 @@ typedef struct {
 	char* flight_mode;
 #endif
 	wifibroadcast_rx_status_t *rx_status;	
+	int rx_port;
 } telemetry_data_t;
 
-wifibroadcast_rx_status_t *telemetry_wbc_status_memory_open(void);
+wifibroadcast_rx_status_t *telemetry_wbc_status_memory_open(int rx_port);

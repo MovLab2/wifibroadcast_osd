@@ -3,12 +3,12 @@
 #include "telemetry.h"
 #include "osdconfig.h"
 
-int width, height;
 #define TO_FEET 3.28084
 #define TO_MPH 0.621371
 #define CELL_WARNING_PCT1 (CELL_WARNING1-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 #define CELL_WARNING_PCT2 (CELL_WARNING2-CELL_MIN)/(CELL_MAX-CELL_MIN)*100
 
+int width, height;
 int scale_factor;
 int home_counter;
 char buffer[50];
@@ -27,9 +27,13 @@ void render_init() {
 	home_counter = 0;
 }
 
-void render(telemetry_data_t *td) {
+void render(telemetry_data_t *td, int cells, bool verbose) {
 	Start(width, height);
-
+	td->cells = cells;
+	//td->rx_port = rx_port;
+	if(td->home_lon == 0 && td->home_lat == 0)
+			td->home_set = false;
+		
 #ifdef ALT
 	#ifdef IMPERIAL
 	draw_altitude((int)(td->altitude * TO_FEET), getWidth(60), getHeight(50), DRAW_ALT_LADDER, 2);
@@ -78,7 +82,7 @@ void render(telemetry_data_t *td) {
 #endif
 
 #ifdef BATT_REMAINING
-	draw_bat_remaining(((td->voltage/CELLS)-CELL_MIN)/(CELL_MAX-CELL_MIN)*100, getWidth(10), getHeight(90), 3);
+	draw_bat_remaining(((td->voltage/td->cells)-CELL_MIN)/(CELL_MAX-CELL_MIN)*100, getWidth(10), getHeight(90), 3);
 #endif 
 
 #ifdef MAVLINK
@@ -198,7 +202,7 @@ float distance_between(float lat1, float long1, float lat2, float long2) {
 }
 
 //taken from tinygps: https://github.com/mikalhart/TinyGPS/blob/master/TinyGPS.cpp#L321
-float course_to (float lat1, float long1, float lat2, float long2) 
+float course_to(float lat1, float long1, float lat2, float long2) 
 {
   // returns course in degrees (North=0, West=270) from position 1 to position 2,
   // both specified as signed decimal-degrees latitude and longitude.

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //#define DEBUG
 #include "osdconfig.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -50,7 +51,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <sys/select.h>
 
-double version = 0.1;
 fd_set set;
 struct timeval timeout;
 
@@ -61,29 +61,79 @@ long long current_timestamp() {
     return milliseconds;
 }
 
-int main(int argc, char *argv[]) {
+int main (int argc, char **argv) {
 	uint8_t buf[256];
 	size_t n;
+	int c;
+	int digit_optind = 0;
+	char* exec = argv[0];
+	int rx_port = 0;
+	int cells = 3;
+	bool verbose = false;
 	
-	printf("%s - 2016\nVersion %d\n\n ",argv[0],version);
-	
-	#ifdef DEBUG
-	printf("%s\n ",argv[1]);
-	#endif
-	
-	//if(argc != 2) {
-	//	printf("Usage: %s\n",argv[0]);
-	//	return 1;
-	//}
+   while (1) {
+        int this_option_optind = optind ? optind : 1;
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"port",    required_argument, NULL,  'p' },
+            {"cells", 	required_argument, NULL,  'c' },
+			{"verbose", no_argument, 0,  'v' },
+			{"help",    no_argument, 0,  'h' },
+            {NULL, 0, NULL,  0 }
+        };
+
+		c = getopt_long(argc, argv, "hvp:c:", long_options, &option_index);
+        if (c == -1)
+            break;
+
+		switch (c) {
+
+			case 'v':
+				verbose = true;
+				break;
+
+		   case 'p':
+				rx_port = atoi(optarg);
+				break;
+				
+			case 'c':
+				cells = atoi(optarg);
+				break;
+
+		   case 'h':
+				print_usage(exec);
+				exit(-1);
+				break;
+
+		   default:
+				fprintf(stderr, "Usage: %s [-pchv]\n", exec);
+				exit(-1);
+		}
+    }
+
+	//=======================================================
+	if(verbose) {
+		printf("%s Starting....\n\n",exec);
+		printf("Battery Cells:%d\n", cells);
+		printf("WiFiBroadcast RX port:%d\n", rx_port);
+		printf("\n");
+	}
 	
 	telemetry_data_t td;
-	telemetry_init(&td);
-	
+	telemetry_init(&td,rx_port);
+		
 #ifdef FRSKY
 	frsky_state_t fs;
 #endif
 	render_init();
+	#ifdef DEBUG
 	long long prev_time = current_timestamp();
+	#endif
+#ifdef MAVLINK	
+	if(verbose) {
+		printf("Render_ini() started...\nWaiting for Mavlink packets.\n");
+	}	
+#endif	
 	while(1) {
 		FD_ZERO(&set);
 		FD_SET(STDIN_FILENO, &set);
@@ -108,12 +158,25 @@ int main(int argc, char *argv[]) {
 		}
 	#ifdef DEBUG
 		prev_time = current_timestamp();
-		render(&td);
+		printf("Sending %d packets to render()\n",n);
+		render(&td,cells,verbose);
 		long long took = current_timestamp() - prev_time;
-		//printf("Render took %lldms to execute.\n", took);
+		printf("Decode and render took %lldms to execute.\n", took);
 	#else
-		render(&td);
+		if(verbose && n > 0)
+			printf("Sending %d packets to render()\n",n);
+		render(&td,cells,verbose);
 	#endif
 	}
 	return 0;
 }
+
+void print_usage(char* cmd){
+	printf("Usage: cat /dev/mavlink0 | %s [-pchv]\n",cmd);
+	printf("  --help -h			This help information.\n");
+	printf("  --verbose -v		Print information to stdout.\n");
+	printf("  --port -p [0-9]	WiFiBroadcast Port for monitoring RX signal.\n");
+	printf("  --cells -c [2-6]	Number of battery cells for battery meter.\n\n");
+}
+
+
