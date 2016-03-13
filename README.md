@@ -77,6 +77,36 @@ make
 #Configuration
 All current configuration values can be set in [osdconfig.h](https://github.com/slackr31337/wifibroadcast_osd/blob/master/osdconfig.h)
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<
+#Mavlink Data TX
+- Start loopback device for teletry data
+sudo socat PTY,link=/dev/mavlink0,echo=0,raw PTY,link=/dev/mavlink1,echo=0,raw > /dev/null 2>&1 &
+
+- Start MavProxy
+sudo mavproxy.py --master=udp:127.0.0.1:14551 --out=udpin:0.0.0.0:14550 --out=/dev/mavlink0 --daemon --nowait -a --logfile=/var/log/mavlink.log > /dev/null 2>&1 &
+
+- Start ArduCopter
+sudo /opt/apm/bin/ArduCopter -A udp:0.0.0.0:14551 -C /dev/ttyAMA0 > /dev/null 2>&1 &
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>
+Mavlink Data RX
+- Start on the same Raspberry Pi
+cat /dev/mavlink0 | /home/pi/wifibroadcast_osd/mavlink_osd
+
+-Start on a remote WiFiBroadcast RX Raspberry Pi
+ /home/pi/wifibroadcast/rx -b 8 -r 4 -f 1024 -p 1 wlan0 | /home/pi/wifibroadcast_osd/mavlink_osd 
+ 
+
+#Usage
+
+ cat /dev/mavlink0 | ./mavlink_osd [-pchv]
+  --help -h           This help information.
+  --verbose -v        Print information to stdout.
+  --port -p [0-9]     WiFiBroadcast Port for monitoring RX signal.
+  --cells -c [2-6]    Number of battery cells for battery meter.
+
+
 # Starting OSD
 I uploaded my start scripts as a sample how to start wifibroadcast with 1 video and 1 telemetry stream. have a look at those and adapt your own start scripts based on that.
 
