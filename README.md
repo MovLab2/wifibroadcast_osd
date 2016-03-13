@@ -77,7 +77,7 @@ make
 #Configuration
 All current configuration values can be set in [osdconfig.h](https://github.com/slackr31337/wifibroadcast_osd/blob/master/osdconfig.h)
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 #Mavlink Data TX
 - Start loopback device for teletry data
 sudo socat PTY,link=/dev/mavlink0,echo=0,raw PTY,link=/dev/mavlink1,echo=0,raw > /dev/null 2>&1 &
@@ -89,7 +89,7 @@ sudo mavproxy.py --master=udp:127.0.0.1:14551 --out=udpin:0.0.0.0:14550 --out=/d
 sudo /opt/apm/bin/ArduCopter -A udp:0.0.0.0:14551 -C /dev/ttyAMA0 > /dev/null 2>&1 &
 
 
->>>>>>>>>>>>>>>>>>>>>>>>>>
+
 Mavlink Data RX
 - Start on the same Raspberry Pi
 cat /dev/mavlink0 | /home/pi/wifibroadcast_osd/mavlink_osd
