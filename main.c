@@ -94,10 +94,20 @@ int main (int argc, char **argv) {
 
 		   case 'p':
 				rx_port = atoi(optarg);
+				if (rx_port < 0 || rx_port > 9) {
+					fprintf(stderr, "ERROR: -p invalid RX port value of %d!\n\n", rx_port);
+					print_usage(exec);
+					exit(-1);
+				}
 				break;
 				
 			case 'c':
 				cells = atoi(optarg);
+				if (cells < 0 || cells > 9) {
+					fprintf(stderr, "ERROR: -c invalid battery cells value of %d!\n\n", cells);
+					print_usage(exec);
+					exit(-1);
+				}
 				break;
 
 		   case 'h':
@@ -173,7 +183,7 @@ int main (int argc, char **argv) {
 
 void print_usage(char* cmd){
 	printf("Usage: cat /dev/mavlink0 | %s [-pchv]\n",cmd);
-	printf("  --help -h			This help information.\n");
+	printf("  --help -h		This help information.\n");
 	printf("  --verbose -v		Print information to stdout.\n");
 	printf("  --port -p [0-9]	WiFiBroadcast Port for monitoring RX signal.\n");
 	printf("  --cells -c [2-6]	Number of battery cells for battery meter.\n\n");
