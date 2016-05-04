@@ -62,7 +62,7 @@ long long current_timestamp() {
 }
 
 int main (int argc, char **argv) {
-	uint8_t buf[256];
+	uint8_t buf[1024];
 	size_t n;
 	int c;
 	int digit_optind = 0;
